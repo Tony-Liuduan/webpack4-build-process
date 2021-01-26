@@ -4,7 +4,7 @@
 * [Webpack揭秘——走向高阶前端的必经之路](https://juejin.cn/post/6844903685407916039)
 
 ## tapable (webpack核心库)
-> 使用tapable来实现plugins的binding和applying，tapable是一个用于事件发布订阅执行的可插拔架构，tapable就是webpack用来创建勾子的库
+> 使用tapable来实现plugins的binding和applying，tapable是一个用于事件**发布订阅**执行的可插拔架构，tapable就是webpack用来创建勾子的库
   * sync
      - SyncHook 同步的串行，不关心监听函数的返回值
      - SyncBailHook 同步的串行，只要监听函数有一个返回值不为null，就跳过剩下所有的函数
@@ -16,8 +16,28 @@
      - AsyncSeriesHook
      - AsyncSeriesBailHook
      - AsyncSeriesWaterfallHook 异步的串行，上一个监听函数的返回值可以传给下一个函数参数
-     
+
      ```js
+     // Tapable 类似于 EventEmit 的实践
+     class SyncHook{
+         constructor(){
+            this.hooks = [];
+         }
+
+         // 订阅事件
+         tap(name, fn){
+             this.hooks.push(fn);
+         }
+
+         // 发布
+         call(){
+             this.hooks.forEach(hook => hook(...arguments));
+         }
+      }
+     ```
+
+     ```js
+     // webpack 调用 tapable
      class Compiler extends Tapable {
 	    constructor(context) {
 		    super();
@@ -29,6 +49,12 @@
         // ...
     }
      ```
+### 自定义 tapable 事件
+
+> 用于提供下游用户自定义事件钩子, 比如  `html-webpack-plugin` 的 htmlWebpackPluginBeforeHtmlProcessing hook
+
+* 示例代码见: `/plugins/MyPlugin.js`, `/plugins/Listen4Myplugin.js`, `/plugins/HtmlAfterWebpckPlugin.js`
+* 实践: `html-webpack-plugin` 提供自定义插件功能
 
 
 ## webpack构建流程
